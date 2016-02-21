@@ -1,0 +1,15 @@
+
+To do:
+
+- Make new code project.
+- Copy 68 kHz code from other project.
+- Copy code to change target to 1 V and 4 V at 100 Hz (no feedback).
+- Build low-pass filter on pin to get output.
+- Add source power of 12 V.
+- Add voltage amplifier (NPN/PNP).
+- Add feedback resistors.
+- Add feedback loop.
+- Add current amplifier.
+- Add current sense resistor.
+- Add current limit code.
+
