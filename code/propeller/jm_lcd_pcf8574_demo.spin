@@ -43,7 +43,6 @@ obj
 ' main                                                          ' * master Spin cog
   time : "jm_time"                                              '   timing and delays
   prng : "jm_prng"                                              '   pseudo-random number generator
-  io   : "jm_io_basic"                                          '   essential io
   lcd  : "jm_lcd_pcf8574"                                       '   LCD via PCF8574
                                                                  
 ' * uses cog when loaded                                         
@@ -144,7 +143,8 @@ pub setup
                                                                  
   prng.seed(-cnt, -cnt ~> 2, $EA7_BEEF, cnt << 2, cnt)          ' seed randomizer
                                                                  
-  io.start(0, 0)                                                ' clear all pins (master cog)
+  outa := 0
+  dira := 0                                                     ' clear all pins (master cog)
                                                                  
   lcd.start(SCL, SDA, LCD_ADDR)                                 ' start LCD (set for address %111)
   lcd.set_char(0, @Mouth0)                                      ' define custom characters
