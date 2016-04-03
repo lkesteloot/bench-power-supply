@@ -224,7 +224,18 @@ pub dec(value) | i, x
     elseif result or (i == 1)                                    
       out("0")                                                              
     i /= 10                                                      
-                                                                 
+
+' Decimal number, divided by 1000. Does not work on negative numbers.
+pub dec_milli(value)
+  dec(value/1000)
+  out(".")
+  rjdec(value//1000, 3, "0")
+  
+' Like dec_milli(), but right-justified. Does not work on negative numbers.
+pub rjdec_milli(value, width, pchar)
+  rjdec(value/1000, width - 4, pchar)
+  out(".")
+  rjdec(value//1000, 3, "0")
                                                                  
 pub rjdec(val, width, pchar) | tmpval, padwidth                  
                                                                  

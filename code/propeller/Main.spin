@@ -26,6 +26,14 @@ DAT
   BootMsg    byte    "Bench Supply v1", 0
   Found      byte    "Found INA219", 0
   NotFound   byte    "Fail INA219", 0
+  ShuntRead  byte    "Shunt reading", 0
+  CurrentRead byte   "Current reading", 0
+  BusRead    byte    "Bus reading", 0
+  PowerRead  byte    "Power reading", 0
+  Amp        byte    " A", 0
+  Volt       byte    " V", 0
+  Watt       byte    " W", 0
+  Millivolt  byte    " mV", 0
 
 PUB start | value
   ' Reset pins, all input.
@@ -45,10 +53,33 @@ PUB start | value
   lcd.move_cursor(0, 1)
 
   repeat
-    value := ina219.read
-    ~~value ' sign-extend from 16 bits to 32.
+    ' Display is laid out like this:
+    ' Voltage (V)       Current (mA)
+    ' Shunt (V)           Power (mW)
+
+    ' Voltage (V).
+    value := ina219.readBus
+    lcd.move_cursor(0, 0)
+    lcd.rjdec_milli(value, LCD_WIDTH/2 - 2, " ")
+    lcd.str(@Volt)
+
+    ' Current (A).
+    value := ina219.readCurrent
+    lcd.rjdec_milli(value, LCD_WIDTH/2 - 2, " ")
+    lcd.str(@Amp)
+
+    ' Shunt (µV)
+    value := ina219.readShunt
     lcd.move_cursor(0, 1)
-    lcd.rjdec(value, LCD_WIDTH, " ")
+    lcd.rjdec(value/1000, LCD_WIDTH/2 - 3, " ")
+    lcd.str(@Millivolt)
+    
+    ' Power (W)
+    value := ina219.readPower
+    lcd.rjdec_milli(value, LCD_WIDTH/2 - 2, " ")
+    lcd.str(@Watt)
+
+    waitcnt(clkfreq + cnt)
 
   ' Blink light.
   dira[LED_PIN] := 1
