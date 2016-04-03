@@ -21,6 +21,7 @@ CON
 OBJ
   lcd : "jm_lcd_pcf8574"
   ina219 : "ina219"
+  quad : "QuadDecoder"  ' http://obex.parallax.com/object/485
   
 DAT
   BootMsg    byte    "Bench Supply v1", 0
@@ -34,6 +35,9 @@ DAT
   Volt       byte    " V", 0
   Watt       byte    " W", 0
   Millivolt  byte    " mV", 0
+  
+VAR
+  long knob
 
 PUB start | value
   ' Reset pins, all input.
@@ -50,7 +54,17 @@ PUB start | value
   ' Initialize the INA219.
   ina219.start(SCL_PIN, SDA_PIN, INA219_ADDR)
 
-  lcd.move_cursor(0, 1)
+  if 0
+    ' Measure sampling frequency.
+    dira[1] := 1
+    repeat
+      value := ina219.readCurrent
+      outa[1] := 1
+      value := ina219.readCurrent
+      outa[1] := 0
+      
+  knob := 0
+  quad.start(2, @knob)
 
   repeat
     ' Display is laid out like this:
@@ -69,10 +83,13 @@ PUB start | value
     lcd.str(@Amp)
 
     ' Shunt (µV)
-    value := ina219.readShunt
     lcd.move_cursor(0, 1)
-    lcd.rjdec(value/1000, LCD_WIDTH/2 - 3, " ")
-    lcd.str(@Millivolt)
+    if 1
+      lcd.rjdec(knob, LCD_WIDTH/2, " ")
+    else
+      value := ina219.readShunt
+      lcd.rjdec(value/1000, LCD_WIDTH/2 - 3, " ")
+      lcd.str(@Millivolt)
     
     ' Power (W)
     value := ina219.readPower
@@ -80,6 +97,9 @@ PUB start | value
     lcd.str(@Watt)
 
     waitcnt(clkfreq + cnt)
+    
+    if knob == 100
+      quad.stop
 
   ' Blink light.
   dira[LED_PIN] := 1
