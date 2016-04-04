@@ -35,12 +35,13 @@ DAT
   Amp        byte    " A", 0
   Volt       byte    " V", 0
   Watt       byte    " W", 0
-  Millivolt  byte    " mV", 0
   
 VAR
   long knob
   long freq
   long phase
+  long targetVoltageMv
+  long errorMv
 
 PUB start | value
   ' Reset pins, all input.
@@ -97,32 +98,33 @@ PUB start | value
     ' Voltage (V)       Current (mA)
     ' Shunt (V)           Power (mW)
 
+    targetVoltageMv := knob*25 #> 0 <# 13000
+
     ' Voltage (V).
     value := ina219.readBus
     lcd.move_cursor(0, 0)
     lcd.rjdec_milli(value, LCD_WIDTH/2 - 2, " ")
     lcd.str(@Volt)
+    
+    ' PID.
+    errorMv := targetVoltageMv - value
+    frqa += errorMv*300000
 
     ' Current (A).
     value := ina219.readCurrent
     lcd.rjdec_milli(value, LCD_WIDTH/2 - 2, " ")
     lcd.str(@Amp)
 
-    ' Shunt (µV)
+    ' Target voltage (mV)
     lcd.move_cursor(0, 1)
-    if 1
-      lcd.rjdec(knob, LCD_WIDTH/2, " ")
-    else
-      value := ina219.readShunt
-      lcd.rjdec(value/1000, LCD_WIDTH/2 - 3, " ")
-      lcd.str(@Millivolt)
-    
+    lcd.rjdec_milli(targetVoltageMv, LCD_WIDTH/2 - 2, " ")
+    lcd.str(@Volt)
+
     ' Power (W)
     value := ina219.readPower
     lcd.rjdec_milli(value, LCD_WIDTH/2 - 2, " ")
     lcd.str(@Watt)
 
-    frqa := knob*$00a3_d70a
     waitcnt(clkfreq/10 + cnt)
 
   ' Blink light.
