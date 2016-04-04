@@ -12,6 +12,7 @@ CON
   LED_PIN = 0
   SDA_PIN = 29
   SCL_PIN = 28
+  SCOPE_PIN = 15
 
   LCD_ADDR = %111
   LCD_WIDTH = 16
@@ -38,6 +39,8 @@ DAT
   
 VAR
   long knob
+  long freq
+  long phase
 
 PUB start | value
   ' Reset pins, all input.
@@ -45,11 +48,15 @@ PUB start | value
   dira := 0
 
   ' Initialize the LCD.
+  waitcnt(clkfreq/10 + cnt)
   lcd.start(SCL_PIN, SDA_PIN, LCD_ADDR)
+  waitcnt(clkfreq/10 + cnt)
   lcd.clear   
   lcd.backlight(true)   
   lcd.move_cursor(0, 0)
+  waitcnt(clkfreq/10 + cnt)
   lcd.str(@BootMsg)
+  waitcnt(clkfreq/10 + cnt)
   
   ' Initialize the INA219.
   ina219.start(SCL_PIN, SDA_PIN, INA219_ADDR)
@@ -62,9 +69,28 @@ PUB start | value
       outa[1] := 1
       value := ina219.readCurrent
       outa[1] := 0
-      
+
   knob := 0
   quad.start(2, @knob)
+  
+  if 0
+    dira[SCOPE_PIN] := 1
+    frqa := 1
+    ctra := (%00110 << 26) | SCOPE_PIN
+    freq := 1
+    phase := 0
+    if 1
+      repeat
+        frqa := knob*$00a3_d70a
+    else
+      repeat
+        frqa := phase
+        phase += freq
+        freq := knob*10000
+
+  dira[SCOPE_PIN] := 1
+  frqa := 1
+  ctra := (%00110 << 26) | SCOPE_PIN
 
   repeat
     ' Display is laid out like this:
@@ -96,10 +122,8 @@ PUB start | value
     lcd.rjdec_milli(value, LCD_WIDTH/2 - 2, " ")
     lcd.str(@Watt)
 
-    waitcnt(clkfreq + cnt)
-    
-    if knob == 100
-      quad.stop
+    frqa := knob*$00a3_d70a
+    waitcnt(clkfreq/10 + cnt)
 
   ' Blink light.
   dira[LED_PIN] := 1

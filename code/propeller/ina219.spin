@@ -47,9 +47,15 @@ PUB start(scl, sda, addr) | reg
 PUB readShunt
   return read_word(REG_SHUNT_VOLTAGE)*10
 
-' Current in mA.
-PUB readCurrent
-  return read_word(REG_CURRENT)*8/100
+' Current in mA. Clamps negative values to zero.
+PUB readCurrent | value
+  value := read_word(REG_CURRENT)
+  
+  ' Clamp negative values to zero.
+  if value & $8000 <> 0
+    value := 0
+
+  return value*8/100
 
 ' Bus voltage in mV.
 PUB readBus
@@ -62,6 +68,7 @@ PUB readPower
   ' Reading times current LSB times 20.
   return read_word(REG_POWER)*8/5
   
+' Reads a 16-bit word.
 PRI read_word(reg) | value
   i2c.start
   i2c.write((i2c_addr << 1) | 0)
@@ -73,6 +80,7 @@ PRI read_word(reg) | value
   i2c.stop
   return value    ' sign-extend from 16 bits to 32.
 
+' Writes a 16-bit word.
 PRI write_word(register, value)
   i2c.start
   i2c.write((i2c_addr << 1) | 0)
